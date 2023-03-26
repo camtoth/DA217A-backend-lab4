@@ -10,6 +10,7 @@ app.set('view-engine', 'ejs');
 const roles = ["teacher", "student", "admin"];
 let currentKey = '';
 let currentRole = ''
+let users = []
 
 app.use(express.urlencoded({extended: false}));
 app.use(express.json());
@@ -32,7 +33,7 @@ app.post('/LOGIN', async (req, res) => {
             if(encryptedPassword && (await bcrypt.compare(req.body.password, encryptedPassword))) {
                 let token = jwt.sign(req.body.username, process.env.ACCESS_TOKEN_SECRET);
                 currentKey = token;
-                console.log("TOKEN: " + token);
+                //console.log("TOKEN: " + token);
                 res.render('start.ejs');
             } else {
                 res.render('fail.ejs');
@@ -44,7 +45,7 @@ app.post('/LOGIN', async (req, res) => {
 })
 
 function authenticateToken (req, res, next) {
-    console.log(currentKey)
+    //console.log(currentKey)
     if (currentKey == ""){
         res.redirect("/LOGIN")
     } else if (jwt.verify(currentKey, process.env.ACCESS_TOKEN_SECRET)){
@@ -56,9 +57,10 @@ function authenticateToken (req, res, next) {
 
 app.get('/admin', authenticateToken, async (req, res, next) => {
     authenticateToken(req, res, next)
-    console.log(currentRole)
     if (currentRole == 2){
-        res.render('admin.ejs', {users: [{userID: 3, name: "name3", role: "clown", password:'admin'}]});
+        users.push(await db.getAllUsers())
+        //console.log(users)
+        res.render('admin.ejs', {users: users});
     } else {
         res.statusCode = 401
         res.render('fail.ejs')
@@ -74,7 +76,7 @@ app.post('/REGISTER', async (req, res) => {
     if((req.body.username != '') && (req.body.password != '')) {
         try {
             const passwordEncryption = await bcrypt.hash(req.body.password, 10);
-            console.log(roles.indexOf(req.body.role))
+            //console.log(roles.indexOf(req.body.role))
             let dbResult = await db.addUser(req.body.username, passwordEncryption, roles.indexOf(req.body.role));
         } catch (err) {
             console.log(err)

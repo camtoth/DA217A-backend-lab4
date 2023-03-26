@@ -12,6 +12,19 @@ const init = () => {
     })
 }
 
+const getAllUsers = async() => {
+    return new Promise ((resolve, reject) => {
+       //here you need to add the sql query to retrieve data from the DB
+        db.all("SELECT * FROM User" ,(error, result) => {
+            if (error){
+                reject(error)
+            }
+            else
+                resolve(result)
+        })
+    })
+}
+
 const getPasswordFromUsername = (username) => {
     return new Promise ((resolve, reject) => {
         //here you need to add the sql query to retrieve data from the DB
@@ -52,4 +65,4 @@ const addUser = (username, password, role) => {
     })
 }
 
-module.exports = {init, getPasswordFromUsername, getRoleFromUsername, addUser}
+module.exports = {init, getAllUsers, getPasswordFromUsername, getRoleFromUsername, addUser}
