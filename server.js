@@ -9,6 +9,7 @@ app.set('view-engine', 'ejs');
 
 const roles = ["teacher", "student", "admin"];
 let currentKey = '';
+let currentRole = ''
 
 app.use(express.urlencoded({extended: false}));
 app.use(express.json());
@@ -27,7 +28,7 @@ app.post('/LOGIN', async (req, res) => {
     if((req.body.username != '')) {
         try {
             const encryptedPassword = await db.getPasswordFromUsername(req.body.username);
-
+            currentRole = await db.getRoleFromUsername(req.body.username)
             if(encryptedPassword && (await bcrypt.compare(req.body.password, encryptedPassword))) {
                 let token = jwt.sign(req.body.username, process.env.ACCESS_TOKEN_SECRET);
                 currentKey = token;
@@ -53,9 +54,16 @@ function authenticateToken (req, res, next) {
     }
 }
 
-app.get('/admin', authenticateToken, (req, res, next) => {
+app.get('/admin', authenticateToken, async (req, res, next) => {
     authenticateToken(req, res, next)
-    res.render('admin.ejs', {users: [{userID: 3, name: "name3", role: "clown", password:'admin'}]});
+    console.log(currentRole)
+    if (currentRole == 2){
+        res.render('admin.ejs', {users: [{userID: 3, name: "name3", role: "clown", password:'admin'}]});
+    } else {
+        res.statusCode = 401
+        res.render('fail.ejs')
+    }
+    
 })
 
 app.get('/REGISTER', (req, res) => {
